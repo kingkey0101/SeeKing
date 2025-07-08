@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import PromptBox from "./components/PromptBox";
+import Message from "./components/Message";
 
 export default function Home() {
   const [expand, setExpand] = useState(false);
@@ -26,7 +27,7 @@ export default function Home() {
           {messages.length === 0 ? (
             <>
               <div className="flex items-center gap-3">
-                <Image src={assets.logo_icon} alt="" className="h-16" />
+                <Image src={assets.logo_icon} alt="" width={100} height={96} />
                 <p className="text-2xl font-medium">Hello, I’m SeeKing</p>
               </div>
               <p className="text-sm mt-2">
@@ -35,7 +36,9 @@ export default function Home() {
               </p>
             </>
           ) : (
-            <div></div>
+            <div>
+              <Message role='user' content='What is next.js?'/>
+            </div>
           )}
           <PromptBox isLoading={isLoading} setIsLoading={setIsLoading}/>
           <p className="text-xs absolute bottom-1 text-gray-500">

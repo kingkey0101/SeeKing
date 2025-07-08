@@ -18,6 +18,9 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <AppContextProvider>
         <html lang="en">
+          <head>
+            <link rel="icon" href="/favicon.png" type="image/png"/>
+          </head>
           <body className={`${inter.className} antialiased`}>{children}</body>
         </html>
       </AppContextProvider>
