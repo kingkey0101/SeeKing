@@ -5,6 +5,12 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 // setting up clerk webhooks for user creation, updates, etc
 export async function POST(req) {
+  if (!process.env.SIGNING_SECRET) {
+    return NextResponse.json(
+      { error: "SIGNING_SECRET environment variable is not set." },
+      { status: 500 }
+    );
+  }
   const wh = new Webhook(process.env.SIGNING_SECRET);
   const headerPayload = await headers();
   const svixHeaders = {
