@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-//for chatschema
+//for chatschema-storing chat info in mongodb
 const ChatSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
