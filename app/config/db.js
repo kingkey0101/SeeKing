@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 // connecting to MongoDB
 let cached = global.mongoose || { conn: null, promise: null };
 
-export default async function connectDBif() {
+export default async function connectDB() {
   if (cached.conn) return cached.conn;
   if (!cached.promise) {
     cached.promise = mongoose
