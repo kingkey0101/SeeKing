@@ -2,10 +2,10 @@ import mongoose from "mongoose";
 //for storing info in db
 const UserSchema = new mongoose.Schema(
   {
-    _id: { type: string, required: true },
-    nane: { type: string, required: true },
-    email: { type: string, required: true },
-    image: { type: string, required: false },
+    _id: { type: String, required: true },
+    nane: { type: String, required: true },
+    email: { type: String, required: true },
+    image: { type: String, required: false },
   },
   { timestamps: true }
 );
