@@ -1,3 +1,4 @@
+import connectDB from "@/app/config/db";
 import Chat from "@/app/models/Chat";
 import { getAuth } from "@clerk/nextjs/dist/types/server";
 import { NextResponse } from "next/server";
@@ -14,6 +15,7 @@ export async function POST(req) {
     //finding chatId & name w/ this req
     const { chatId, name } = await req.json();
     //updating chat name in mongodb
+    await connectDB();
     await Chat.findOneAndUpdate({ _id: chatId, userId }, { name });
 
     return NextResponse.json({ success: true, message: "Chat Renamed" });
