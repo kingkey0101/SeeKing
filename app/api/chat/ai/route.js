@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import connectDB from "@/app/config/db";
 import Chat from "@/app/models/Chat";
 import { getAuth } from "@clerk/nextjs/server";
