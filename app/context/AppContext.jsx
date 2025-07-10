@@ -1,7 +1,8 @@
 "use client";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export const AppContext = createContext();
 
@@ -31,19 +32,57 @@ export const AppContextProvider = ({ children }) => {
           },
         }
       );
+      fetchUsersChats();
     } catch (error) {
-      toast
+      toast.error(error.message);
     }
   };
 
-  const fetchUsersChats = async ()=>{
+  const fetchUsersChats = async () => {
     try {
-      
-    } catch (error) {
-      
-    }
-  }
+      const token = await getToken();
+      const { data } = await axios.get("/api/chat/get", {
+        headers: {
+          Authorization: `Bearer $[token]`,
+        },
+      });
+      if (data.success) {
+        console.log(data.data);
+        setChats(data.data);
+        //if no chats for user create new
+        if (data.data.length === 0) {
+          await createNewChat();
+          return fetchUsersChats();
+        } else {
+          //sort by updated date
+          data.data.sort(
+            (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+          );
 
-  const value = { user };
+          //setting most recently updated chat as selected
+          setSelcetedChat(data.data[0]);
+          console.log(data.data[0]);
+        }
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+  useEffect(() => {
+    if (user) {
+      fetchUsersChats();
+    }
+  }, [user]);
+  const value = {
+    user,
+    chats,
+    setChats,
+    selectedChat,
+    setSelcetedChat,
+    fetchUsersChats,
+    createNewChat,
+  };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
