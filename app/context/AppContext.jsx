@@ -15,7 +15,10 @@ export const AppContextProvider = ({ children }) => {
   const { getToken } = useAuth();
 
   const [chats, setChats] = useState([]);
-  const [selectedChat, setSelcetedChat] = useState(null);
+  const [selectedChat, setSelectedChat] = useState({
+    _id: null,
+    messages: [],
+  });
 
   const createNewChat = async () => {
     try {
@@ -23,18 +26,39 @@ export const AppContextProvider = ({ children }) => {
 
       const token = await getToken();
 
-      await axios.post(
+      const response = await axios.post(
         "/api/chat/create",
         {},
         {
           headers: {
-            Authorization: `Bearer $[token]`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      fetchUsersChats();
+      console.log("Full response from create:", response);
+      if (response.data && response.data.success) {
+        const newChat = response.data.data;
+        console.log("Full newChat object:", newChat);
+
+        if (!newChat || !newChat._id) {
+          toast.error("Received invalid chat from server");
+          return null;
+        }
+        setChats((prev) => [newChat, ...prev]);
+        setSelectedChat(newChat);
+        return newChat;
+      } else {
+        toast.error(response.data?.message || "Failed to create new chat");
+        return null;
+      }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Chat creation error:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Something went wrong"
+      );
+      return null;
     }
   };
 
@@ -43,26 +67,23 @@ export const AppContextProvider = ({ children }) => {
       const token = await getToken();
       const { data } = await axios.get("/api/chat/get", {
         headers: {
-          Authorization: `Bearer $[token]`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      if (data.success) {
-        console.log(data.data);
-        setChats(data.data);
-        //if no chats for user create new
-        if (data.data.length === 0) {
-          await createNewChat();
-          return fetchUsersChats();
-        } else {
-          //sort by updated date
-          data.data.sort(
-            (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-          );
 
-          //setting most recently updated chat as selected
-          setSelcetedChat(data.data[0]);
-          console.log(data.data[0]);
+      if (data.success) {
+        if (data.data.length === 0) {
+          const newChat = await createNewChat(); //  get chat
+          if (newChat) {
+            setChats([newChat]);
+            setSelectedChat(newChat); //  set it directly
+          }
+          return;
         }
+
+        data.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        setChats(data.data);
+        setSelectedChat(data.data[0]);
       } else {
         toast.error(data.message);
       }
@@ -70,6 +91,7 @@ export const AppContextProvider = ({ children }) => {
       toast.error(error.message);
     }
   };
+
   useEffect(() => {
     if (user) {
       fetchUsersChats();
@@ -80,7 +102,7 @@ export const AppContextProvider = ({ children }) => {
     chats,
     setChats,
     selectedChat,
-    setSelcetedChat,
+    setSelectedChat,
     fetchUsersChats,
     createNewChat,
   };

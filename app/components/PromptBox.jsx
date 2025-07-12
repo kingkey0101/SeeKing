@@ -7,8 +7,21 @@ import axios from "axios";
 
 const PromptBox = ({ setIsLoading, isLoading }) => {
   const [prompt, setPrompt] = useState("");
-  const { user, chats, setChats, selectedChat, setSelectedChat } =
-    useAppContext();
+  const {
+    user,
+    chats,
+    setChats,
+    selectedChat,
+    setSelectedChat,
+    createNewChat,
+  } = useAppContext();
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendPrompt(e);
+    }
+  };
 
   const sendPrompt = async (e) => {
     const promptCopy = prompt;
@@ -16,6 +29,23 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
       e.preventDefault();
       if (!user) return toast.error("Login to use SeeKing");
       if (isLoading) return toast.error("Please wait for previous response");
+      if (!selectedChat || !selectedChat._id) {
+        toast.loading("Creating new chat...");
+        const newChat = await createNewChat();
+
+        if (!newChat || !newChat._id) {
+          toast.error("Failed to create a new chat.");
+          return;
+        }
+        console.log("New chat ID:", newChat._id); // Should not be null
+        console.log("🤖 Assistant reply:", data.data);
+        setSelectedChat(newChat);
+      }
+      if (!selectedChat || !selectedChat._id || !selectedChat.messages) {
+        toast.error("Please wait, chat is still initializing...");
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       setPrompt("");
 
@@ -41,12 +71,17 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
         ...prev,
         messages: [...prev.messages, userPrompt],
       }));
-
+      // console.log("Sending prompt with chatId:", selectedChat?._id);
+      console.log("Sending prompt:", {
+        chatId: selectedChat._id,
+        prompt,
+      });
       const { data } = await axios.post("/api/chat/ai", {
         chatId: selectedChat._id,
         prompt,
       });
       if (data.success) {
+        console.log("Full AI response:", data.data);
         setChats((prevChats) =>
           prevChats.map((chat) =>
             chat._id === selectedChat._id
@@ -70,7 +105,7 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
         for (let i = 0; i < messageTokens.length; i++) {
           setTimeout(() => {
             assistantMessage.content = messageTokens.slice(0, i + 1).join(" ");
-            selectedChat((prev) => {
+            setSelectedChat((prev) => {
               const updatedMessages = [
                 ...prev.messages.slice(0, -1),
                 assistantMessage,
@@ -89,13 +124,16 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
     } finally {
       setIsLoading(false);
     }
+    console.log("Sending with chatId:", selectedChat._id);
   };
   return (
     <form
+      onSubmit={sendPrompt}
       className={`w-full ${false ? "max-w-3xl" : "max-w-2xl"}
     bg-[#404045] p-4 rounded-3xl mt-4 transition-all`}
     >
       <textarea
+        onKeyDown={handleKeyDown}
         className="outline-none w-full resize-none overflow-hidden break-words bg-transparent"
         rows={2}
         placeholder="Message SeeKing"
