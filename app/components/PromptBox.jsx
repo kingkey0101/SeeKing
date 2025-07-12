@@ -95,26 +95,8 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
           content: "",
           timestamp: assistantMessage.timestamp || Date.now(),
         };
-        let displayContent = '';
-        for(let i = 0; i < messageTokens.length; i++){
-          setTimeout(()=> {
-            displayContent += messageTokens[i];
-            assistantMessageDisplay.content = displayContent;
-            setSelectedChat((prev)=>{
-              const updatedMessages = [...prev.messages];
-              if(
-                updatedMessages.length > 0 && 
-                updatedMessages[updatedMessages.length -1].role === 'assistant'
-              ) {
-                updatedMessages[updatedMessages.length -1] = assistantMessageDisplay;
-              } else {
-                updatedMessages.push(assistantMessageDisplay);
-              }
-              return {...prev, messages: updatedMessages}
-            })
-          }, i * 20)
-        }
-       
+        let displayContent = "";
+
         setSelectedChat((prev) => ({
           ...prev,
           messages: [...prev.messages, assistantMessageDisplay],
@@ -132,7 +114,7 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
               ];
               return { ...prev, messages: updatedMessages };
             });
-          }, i * 80);
+          }, i * 20);
         }
       } else {
         toast.error(data.message);
@@ -149,7 +131,9 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
   return (
     <form
       onSubmit={sendPrompt}
-      className={`w-full ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"}
+      className={`w-full ${
+        selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"
+      }
     bg-[#404045] p-4 rounded-3xl mt-4 transition-all`}
     >
       <textarea
