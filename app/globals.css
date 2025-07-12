@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import 'highlight.js/styles/github-dark.css';
+
 
 @theme {
   --color-primary: #4d6bfe;
@@ -18,4 +20,12 @@ html {
 
 .loader div:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+code {
+  white-space: pre-wrap !important;
+}
+
+pre {
+  border-radius: 10px !important;
 }

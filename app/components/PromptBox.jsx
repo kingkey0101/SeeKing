@@ -81,38 +81,58 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
         prompt,
       });
       if (data.success) {
-        console.log("Full AI response:", data.data);
-        setChats((prevChats) =>
-          prevChats.map((chat) =>
-            chat._id === selectedChat._id
-              ? { ...chat, messages: [...chat.messages, data.data] }
-              : chat
-          )
-        );
+        const chat = data.data;
+        //get assistant message from the end of message array
+        const assistantMessage = chat.messages[chat.messages.length - 1];
+        if (!assistantMessage || !assistantMessage.content) {
+          toast.error("Assistant message missing");
+          return;
+        }
+        const messageTokens = assistantMessage.content.split("");
 
-        const message = data.data.content;
-        const messageTokens = message.split(" ");
-        let assistantMessage = {
-          role: "assistant",
+        let assistantMessageDisplay = {
+          role: "assistnat",
           content: "",
-          timestamp: Date.now(),
+          timestamp: assistantMessage.timestamp || Date.now(),
         };
+        let displayContent = '';
+        for(let i = 0; i < messageTokens.length; i++){
+          setTimeout(()=> {
+            displayContent += messageTokens[i];
+            assistantMessageDisplay.content = displayContent;
+            setSelectedChat((prev)=>{
+              const updatedMessages = [...prev.messages];
+              if(
+                updatedMessages.length > 0 && 
+                updatedMessages[updatedMessages.length -1].role === 'assistant'
+              ) {
+                updatedMessages[updatedMessages.length -1] = assistantMessageDisplay;
+              } else {
+                updatedMessages.push(assistantMessageDisplay);
+              }
+              return {...prev, messages: updatedMessages}
+            })
+          }, i * 20)
+        }
+       
         setSelectedChat((prev) => ({
           ...prev,
-          messages: [...prev.messages, assistantMessage],
+          messages: [...prev.messages, assistantMessageDisplay],
         }));
 
         for (let i = 0; i < messageTokens.length; i++) {
           setTimeout(() => {
-            assistantMessage.content = messageTokens.slice(0, i + 1).join(" ");
+            assistantMessageDisplay.content = messageTokens
+              .slice(0, i + 1)
+              .join("");
             setSelectedChat((prev) => {
               const updatedMessages = [
                 ...prev.messages.slice(0, -1),
-                assistantMessage,
+                assistantMessageDisplay,
               ];
               return { ...prev, messages: updatedMessages };
             });
-          }, i * 100);
+          }, i * 80);
         }
       } else {
         toast.error(data.message);
@@ -129,7 +149,7 @@ const PromptBox = ({ setIsLoading, isLoading }) => {
   return (
     <form
       onSubmit={sendPrompt}
-      className={`w-full ${false ? "max-w-3xl" : "max-w-2xl"}
+      className={`w-full ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"}
     bg-[#404045] p-4 rounded-3xl mt-4 transition-all`}
     >
       <textarea
